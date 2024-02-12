@@ -16,7 +16,7 @@
 #include "json.hpp"
 #include "phoneme_ids.hpp"
 #include "phonemize.hpp"
-#include "tashkeel.hpp"
+//#include "tashkeel.hpp"
 #include "uni_algo.h"
 
 using json = nlohmann::json;
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
   piper::eSpeakPhonemeConfig eSpeakConfig;
   piper::CodepointsPhonemeConfig codepointsConfig;
   piper::PhonemeIdConfig idConfig;
-  tashkeel::State tashkeelState;
+  //tashkeel::State tashkeelState;
 
   if (runConfig.phonemeType == eSpeakPhonemes) {
     // Need to initialize eSpeak
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Special handling for Arabic
-  if (runConfig.language == "ar") {
+  /*if (runConfig.language == "ar") {
     if (runConfig.tashkeelModelPath) {
       // Load tashkeel
       tashkeel::tashkeel_load(runConfig.tashkeelModelPath->string(),
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
                    "diacritized!"
                 << std::endl;
     }
-  }
+  }*/
 
   // Count of missing phonemes from phoneme/id map
   std::map<piper::Phoneme, std::size_t> missingPhonemes;

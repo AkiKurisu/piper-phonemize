@@ -7,7 +7,7 @@
 
 #include "phoneme_ids.hpp"
 #include "phonemize.hpp"
-#include "tashkeel.hpp"
+//#include "tashkeel.hpp"
 #include "uni_algo.h"
 
 std::string idString(const std::vector<std::vector<piper::Phoneme>> &phonemes,
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   // --------------------------------------------------------------------------
 
   // Test Arabic with libtashkeel (https://github.com/mush42/libtashkeel)
-  tashkeel::State tashkeelState;
+  /*tashkeel::State tashkeelState;
   tashkeel::tashkeel_load(argv[2], tashkeelState);
 
   std::string expectedText = "مَرْحَبًا";
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
     std::cerr << "Expected '" << expectedText << "', got '" << actualText << "'"
               << std::endl;
     return 1;
-  }
+  }*/
 
   // --------------------------------------------------------------------------
 

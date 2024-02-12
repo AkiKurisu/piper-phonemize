@@ -1,9 +1,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include <espeak-ng/speak_lib.h>
-#include <onnxruntime_cxx_api.h>
+//#include <onnxruntime_cxx_api.h>
 
 #include "phonemize.hpp"
 #include "uni_algo.h"
