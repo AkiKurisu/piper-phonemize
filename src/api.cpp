@@ -2,25 +2,29 @@
 #include <iostream>
 #include "api.h"
 
-static bool eSpeakInitialized = false;
-static PiperTextPhonemes* result = nullptr;
+static bool isPiperInit = false;
+static PiperProcessedText* result = nullptr;
 
 void free_results();
 
-int preprocess_text(const char *text, const char *voice, const char *dataPath)
+int init_piper(const char* dataPath)
 {
+    int code = espeak_Initialize(AUDIO_OUTPUT_SYNCHRONOUS, 0, dataPath, 0);
+    if (code < 0)
+        return code;
+
+    isPiperInit = true;
+    return 0;
+}
+
+int process_text(const char *text, const char *voice)
+{
+    if (!isPiperInit)
+        return -1;
+
     // reset results
     free_results();
-    result = new PiperTextPhonemes();
-
-    if (!eSpeakInitialized)
-    {
-        int code = espeak_Initialize(AUDIO_OUTPUT_SYNCHRONOUS, 0, dataPath, 0);
-        if (code < 0)
-            return code;
-
-        eSpeakInitialized = true;
-    }
+    result = new PiperProcessedText();
 
     piper::eSpeakPhonemeConfig config;
     config.voice = voice;
@@ -31,7 +35,7 @@ int preprocess_text(const char *text, const char *voice, const char *dataPath)
     // save results
     size_t sentencesCount = phonemesBySentence.size();
     result->sentencesCount = sentencesCount;
-    result->sentences = new PiperSentencePhonemes[sentencesCount];
+    result->sentences = new PiperProcessedSentence[sentencesCount];
 
     piper::PhonemeIdConfig idConfig;
     for (size_t i = 0; i < sentencesCount; i++)
@@ -44,7 +48,7 @@ int preprocess_text(const char *text, const char *voice, const char *dataPath)
         
         // copy results
         size_t phonemesIdsLength = phonemeIds.size();
-        PiperSentencePhonemes& resultSentence = result->sentences[i];
+        PiperProcessedSentence& resultSentence = result->sentences[i];
 
         resultSentence.phonemesIdsLength = phonemesIdsLength;
         resultSentence.phonemesIds = new piper::PhonemeId[phonemesIdsLength];
@@ -54,7 +58,7 @@ int preprocess_text(const char *text, const char *voice, const char *dataPath)
     return 0;
 }
 
-PiperTextPhonemes get_preprocessed_text()
+PiperProcessedText get_processed_text()
 {
     return *result;
 }
@@ -75,5 +79,7 @@ void free_results()
 
 void free_piper()
 {
+    espeak_Terminate();
     free_results();
+    isPiperInit = false;
 }
