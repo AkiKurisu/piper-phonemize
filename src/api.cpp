@@ -1,36 +1,23 @@
+#include <fstream>
+#include <iostream>
 #include "api.h"
 
-struct PhonemizeStateSentences
-{
-    std::vector<piper::Phoneme> phonemes;
-    std::vector<piper::PhonemeId> phonemeIds;
-    std::map<piper::Phoneme, std::size_t> missingPhonemes;
-};
+static bool eSpeakInitialized = false;
+static PiperTextPhonemes* result = nullptr;
 
-struct PhonemizeState
-{
-    std::vector<PhonemizeStateSentences> sentences;
-} state;
+void free_results();
 
-bool eSpeakInitialized = false;
-
-void reset_state()
+int preprocess_text(const char *text, const char *voice, const char *dataPath)
 {
-    state.sentences.clear();
-}
+    // reset results
+    free_results();
+    result = new PiperTextPhonemes();
 
-int text_to_espeak_phonemes_ids(const char *text, const char *voice, const char *dataPath)
-{
-    reset_state();
-    
     if (!eSpeakInitialized)
     {
-        int result =
-            espeak_Initialize(AUDIO_OUTPUT_SYNCHRONOUS, 0, dataPath, 0);
-        if (result < 0)
-        {
-            return result;
-        }
+        int code = espeak_Initialize(AUDIO_OUTPUT_SYNCHRONOUS, 0, dataPath, 0);
+        if (code < 0)
+            return code;
 
         eSpeakInitialized = true;
     }
@@ -41,32 +28,52 @@ int text_to_espeak_phonemes_ids(const char *text, const char *voice, const char 
     std::vector<std::vector<piper::Phoneme>> phonemesBySentence;
     piper::phonemize_eSpeak(text, config, phonemesBySentence);
 
+    // save results
+    size_t sentencesCount = phonemesBySentence.size();
+    result->sentencesCount = sentencesCount;
+    result->sentences = new PiperSentencePhonemes[sentencesCount];
+
     piper::PhonemeIdConfig idConfig;
-    for(std::vector<piper::Phoneme> phonemesSentence : phonemesBySentence)
+    for (size_t i = 0; i < sentencesCount; i++)
     {
+        std::vector<piper::Phoneme> phonemesSentence = phonemesBySentence[i];
         std::vector<piper::PhonemeId> phonemeIds;
         std::map<piper::Phoneme, std::size_t> missingPhonemes;
 
         phonemes_to_ids(phonemesSentence, idConfig, phonemeIds, missingPhonemes);
+        
+        // copy results
+        size_t phonemesIdsLength = phonemeIds.size();
+        PiperSentencePhonemes& resultSentence = result->sentences[i];
 
-        state.sentences.push_back({phonemesSentence, phonemeIds, missingPhonemes});
+        resultSentence.phonemesIdsLength = phonemesIdsLength;
+        resultSentence.phonemesIds = new piper::PhonemeId[phonemesIdsLength];
+        std::copy(phonemeIds.begin(), phonemeIds.end(), resultSentence.phonemesIds);
     }
 
     return 0;
 }
 
-Results get_results()
+PiperTextPhonemes get_preprocessed_text()
 {
-    Results results;
-    results.sentencesCount = state.sentences.size();
+    return *result;
+}
 
-    results.sentences = new Sentence[results.sentencesCount];
-    for (int i = 0; i < results.sentencesCount; i++)
+void free_results()
+{
+    if (result == nullptr)
+        return;
+
+    for (int i = 0; i < result->sentencesCount; i++)
     {
-        PhonemizeStateSentences stateSentence = state.sentences[i];
-        results.sentences[i].phonemesIdsLength = stateSentence.phonemeIds.size();
-        results.sentences[i].phonemesIds = stateSentence.phonemeIds.data();
+        delete[] result->sentences[i].phonemesIds;
     }
+    delete[] result->sentences;
+    delete result;
+    result = nullptr;
+}
 
-    return results;
+void free_piper()
+{
+    free_results();
 }

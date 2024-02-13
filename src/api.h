@@ -14,19 +14,21 @@
 
 extern "C" {
 
-    typedef struct Sentence {
+    struct PiperSentencePhonemes {
         piper::PhonemeId* phonemesIds;
         size_t phonemesIdsLength;
     };
 
-    typedef struct Results {
-        Sentence* sentences;
+    struct PiperTextPhonemes {
+        PiperSentencePhonemes* sentences;
         size_t sentencesCount;
     };
 
-    PIPERPHONEMIZE_EXPORT int text_to_espeak_phonemes_ids(const char* text, const char* voice, const char* dataPath);
+    PIPERPHONEMIZE_EXPORT int preprocess_text(const char* text, const char* voice, const char* dataPath);
 
-    PIPERPHONEMIZE_EXPORT Results get_results();
+    PIPERPHONEMIZE_EXPORT PiperTextPhonemes get_preprocessed_text();
+
+    PIPERPHONEMIZE_EXPORT void free_piper();
 }
 
 #endif // API_H_
